@@ -19,7 +19,7 @@ from torchvision import datasets, models, transforms
 from dataloader import CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, UnNormalizer, Normalizer, RGB_MEAN, RGB_STD
 from scipy.optimize import linear_sum_assignment
 
-assert torch.__version__.split('.')[1] == '4'
+assert torch.__version__.split('.')[1] == '6'
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
 
