@@ -57,7 +57,7 @@ class CSVDataset(Dataset):
         for image_name in self.image_names:
             self.image_name_prefix.append(image_name[0:-len(image_name.split('/')[-1].split('_')[-1])])
         self.image_name_prefix = set(self.image_name_prefix)
-        print('total vedio count: {}'.format(len(self.image_name_prefix)))
+        print('Total video count: {}'.format(len(self.image_name_prefix)))
         for image_name in self.image_names:
             cur_prefix = image_name[0:-len(image_name.split('/')[-1].split('_')[-1])]
             if cur_prefix not in self.name2video_frames:
