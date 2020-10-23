@@ -32,7 +32,7 @@ import losses
 from dataloader import CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, UnNormalizer, Normalizer, PhotometricDistort, RandomSampleCrop
 from torch.utils.data import Dataset, DataLoader
 
-assert torch.__version__.split('.')[1] == '4'
+assert torch.__version__.split('.')[1] == '6'
 
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
@@ -43,12 +43,14 @@ def main(args=None):
 
 	parser.add_argument('--dataset', default='csv', type=str, help='Dataset type, must be one of csv or coco.')
 	parser.add_argument('--model_dir', default='./ctracker/', type=str, help='Path to save the model.')
-	parser.add_argument('--root_path', default='/dockerdata/home/changanwang/Dataset/Tracking/MOT17Det/', type=str, help='Path of the directory containing both label and images')
+	parser.add_argument('--root_path', default='/Dataset/Tracking/MOT17/', type=str, help='Path of the directory containing both label and images')
 	parser.add_argument('--csv_train', default='train_annots.csv', type=str, help='Path to file containing training annotations (see readme)')
 	parser.add_argument('--csv_classes', default='train_labels.csv', type=str, help='Path to file containing class list (see readme)')
 	
 	parser.add_argument('--depth', help='Resnet depth, must be one of 18, 34, 50, 101, 152', type=int, default=50)
 	parser.add_argument('--epochs', help='Number of epochs', type=int, default=100)
+	parser.add_argument('--print_freq', help='Print frequency', type=int, default=100)
+	parser.add_argument('--save_every', help='Save a checkpoint of model at given interval of epochs', type=int, default=5)
 
 	parser = parser.parse_args(args)
 	print(parser)
@@ -143,13 +145,19 @@ def main(args=None):
 
 				loss_hist.append(float(loss))
 				epoch_loss.append(float(loss))
+				
+				# print frequency default=100 or e.g. --print_freq 500
+				if total_iter % parser.print_freq == 0:
+					print('Epoch: {} | Iter: {} | Cls loss: {:1.5f} | Reid loss: {:1.5f} | Reg loss: {:1.5f} | Running loss: {:1.5f}'.format(epoch_num, iter_num, float(classification_loss), float(reid_loss), float(regression_loss), np.mean(loss_hist)))
 
-				print('Epoch: {} | Iter: {} | Cls loss: {:1.5f} | Reid loss: {:1.5f} | Reg loss: {:1.5f} | Running loss: {:1.5f}'.format(epoch_num, iter_num, float(classification_loss), float(reid_loss), float(regression_loss), np.mean(loss_hist)))
 			except Exception as e:
 				print(e)
 				continue
 
-		scheduler.step(np.mean(epoch_loss))	
+		scheduler.step(np.mean(epoch_loss))
+		# Save a checkpoint of model at given interval of epochs e.g. --save_every 10
+		if epoch_num % parser.save_every == 0:
+			torch.save(retinanet, os.path.join(parser.model_dir, "weights_epoch_" + str(epoch_num) + ".pt"))
 
 	retinanet.eval()
 
